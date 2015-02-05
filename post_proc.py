@@ -1,13 +1,15 @@
+#!/usr/bin/env python3
+
 #!/home/maxhutch/anaconda3/bin/python
 
 archive = "acherry#hpss_test/~/pub/"
 output = "maxhutch#alpha-admin/pub/"
-home_end = "alcf#dtn_mira/projects/alpha-nek/"
-home = "/projects/alpha-nek/"
+home_end = "maxhutch#edoras/home/maxhutch/science/RTI/"
+home = "/home/maxhutch/science/RTI/"
 
 #source = "fingers/hemisphere/hemi_finger"
-source = "fingers/hemisphere_wide/hemi_wide"
-#source = "fingers/cone/cone_finger"
+#source = "fingers/hemisphere_wide/hemi_wide"
+source = "fingers/cone/cone_finger"
 
 from os.path import dirname, basename
 experiment = dirname(source)
@@ -15,6 +17,9 @@ run = basename(source)
 start = 1
 end   = 3
 nodes = 1
+
+enable_archive = False
+enable_upload = False
 
 def get_fname(source, proc_i, frame, params, fmt = None):
   from os.path import dirname, basename
@@ -30,7 +35,23 @@ def get_fname(source, proc_i, frame, params, fmt = None):
   fname = fmt.format(**locals())
   return fname
 
-def upload(home_end, output, source):
+"""
+def process(source, start, end, nodes):
+  from subprocess import call
+  with open("tmp.stdout", "w") as f:
+    call(args=["qsub", "-t 60", "-n {:d}".format(nodes), "/projects/alpha-nek/pp.sh", source, "{:d} {:d}".format(start, end)], stdout=f)
+  # wait for processing job
+  with open("tmp.stdout", "r") as f:
+    jobid = int(f.readline())
+  print("Waiting for job {:d}".format(jobid))
+  call(args=["cqwait", "{:d}".format(jobid)])
+"""
+
+def process(source, start, end, nodes):
+  from subprocess import call
+  call(args=["/home/maxhutch/src/nek-analyze/load.py", source, "-f {:d}".format(start), "-e {:d}".format(end)])
+
+def upload_results(home_end, output, source):
     experiment = dirname(source)
     parts = home_end.partition("/")
     home = parts[1] + parts[2]
@@ -61,6 +82,7 @@ new_source = exists(fname)
 
 from subprocess import call
 if new_source:
+ if enable_archive:
   print("Found {:s}, archiving".format(fname))
   transfer = ""
   for j in range(start, end+1):
@@ -79,7 +101,7 @@ else:
   for j in range(start, end+1):
     for i in range(int(abs(params["io_files"]))):
       fname_src = get_fname(source, i, j, params) 
-      fname_dst = get_fname(source, i, j, params, fmt = "/raw/{root:s}/T{frame:05d}/{name:s}{proc:s}.f{frame:05d}") 
+      fname_dst = get_fname(source, i, j, params, fmt = "/{root:s}/raw/T{frame:05d}/{name:s}{proc:s}.f{frame:05d}") 
       transfer += "{:s}/{:s} {:s}/{:s}\n".format(archive, fname_dst, home_end, fname_src)
   with open("tmp.transfer", "w") as f:
     f.write(transfer)
@@ -95,52 +117,13 @@ else:
 
 # queue processing job
 if nodes != 0:
-  with open("tmp.stdout", "w") as f:
-    call(args=["qsub", "-t 60", "-n {:d}".format(nodes), "/projects/alpha-nek/pp.sh", home+source, "{:d} {:d}".format(start, end)], stdout=f)
-  # wait for processing job
-  with open("tmp.stdout", "r") as f:
-    jobid = int(f.readline())
-  print("Waiting for job {:d}".format(jobid))
-  call(args=["cqwait", "{:d}".format(jobid)])
+  process(home+source, start, end, nodes)
 
 # setup upload
-upload(home_end, output, source)
-
-"""
-from os import listdir
-transfer = ""
-transfer += "{:s}{:s}-results.dat {:s}/cache/{:s}-results.dat \n".format(home_end, source, output, source)
-transfer += "{:s}{:s}.json {:s}/cache/{:s}.json \n".format(home_end, source, output, source)
-for file in listdir(home+experiment):
-  if file[-3:] == "png":
-    transfer += "{:s}/{:s} {:s}/{:s}/img/{:s} \n".format(home_end+experiment, file, output,experiment, file)
-  if file[-3:] == "npz":
-    transfer += "{:s}/{:s} {:s}/{:s}/dat/{:s} \n".format(home_end+experiment, file, output,experiment, file)
-
-# write and execute transfer
-with open("tmp.transfer", "w") as f:
-  f.write(transfer)
-with open("tmp.transfer", "r") as f:
-  call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label=upload_{:s}_proc".format(run)], stdin=f)
-"""
+if enable_upload:
+  upload_results(home_end, output, source)
 
 # setup archive
-upload(home_end, archive, source)
-
-"""
-transfer = ""
-transfer += "{:s}{:s}-results.dat {:s}/cache/{:s}-results.dat \n".format(home_end, source, archive, source)
-transfer += "{:s}{:s}.json {:s}/cache/{:s}.json \n".format(home_end, source, archive, source)
-for file in listdir(home+experiment):
-  if file[-3:] == "png":
-    transfer += "{:s}/{:s} {:s}/{:s}/img/{:s} \n".format(home_end+experiment, file, archive, experiment, file)
-  if file[-3:] == "npz":
-    transfer += "{:s}/{:s} {:s}/{:s}/dat/{:s} \n".format(home_end+experiment, file, archive, experiment, file)
-
-# write and execute transfer
-with open("tmp.transfer", "w") as f:
-  f.write(transfer)
-with open("tmp.transfer", "r") as f:
-  call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label=archive_{:s}_proc".format(run)], stdin=f)
-"""
+if enable_upload:
+  upload_results(home_end, archive, source)
 
