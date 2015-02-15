@@ -49,7 +49,7 @@ def command_line_ui():
                  help="Archive raw")
   p.add_argument("--upload", default=defaults["enable_upload"],
                  help="Upload results")
-  p.add_argument("-n", "--nodes", default=1,
+  p.add_argument("-n", "--nodes", type=int, default=1,
                  help="Number of nodes to run on")
 
   """ 
