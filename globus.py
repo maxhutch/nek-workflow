@@ -7,8 +7,8 @@ def upload_results(home_end, output, source):
   home = parts[1] + parts[2]
   # setup transfer
   transfer = ""
-  transfer += "{:s}/{:s}-results.dat {:s}/cache/{:s}-results.dat \n".format(home_end, source, output, source)
-  transfer += "{:s}/{:s}.json {:s}/cache/{:s}.json \n".format(home_end, source, output, source)
+  transfer += "{:s}/{:s}-results/ {:s}/{:s}-results/ -r \n".format(home_end, source, output, source)
+  transfer += "{:s}/{:s}.json {:s}/{:s}.json \n".format(home_end, source, output, source)
   from os import listdir
   for file in listdir(home+experiment):
     if file[-3:] == "png":
