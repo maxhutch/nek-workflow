@@ -45,10 +45,12 @@ def command_line_ui():
                  help="[Starting] Frame number")
   p.add_argument("-e",  "--frame_end", type=int, default=-1,   
                  help="Ending frame number")
-  p.add_argument("--archive", default=defaults["enable_archive"],
-                 help="Archive raw")
-  p.add_argument("--upload", default=defaults["enable_upload"],
-                 help="Upload results")
+  p.add_argument("--archive",    action="store_true",   help="Archive raw",   dest="archive")
+  p.add_argument("--no-archive", action="store_false",  help="Archive raw",   dest="archive")
+  p.add_argument("--upload",     action="store_true",   help="Upload results", dest="upload")
+  p.add_argument("--no-upload",  action="store_false",  help="Upload results", dest="upload")
+  p.set_defaults(archive=defaults["enable_archive"])
+  p.set_defaults(upload=defaults["enable_upload"])
   p.add_argument("-n", "--nodes", type=int, default=1,
                  help="Number of nodes to run on")
 
