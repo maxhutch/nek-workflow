@@ -22,7 +22,7 @@ def command_line_ui():
                'enable_archive' : False,
                'enable_upload'  : False,
                'arch_end' : "acherry#hpss_test/~/pub/",
-               'outp_end' : "maxhutch#alpha-admin/pub/",
+               'outp_end' : "maxhutch#alpha-admin/tmp/",
                'home_end' : "maxhutch#edoras/home/maxhutch/science/RTI/",
                'foo'      : "bar"
              }

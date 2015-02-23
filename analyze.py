@@ -27,6 +27,7 @@ sleep 5
 exit
 """
 
+"""
 def process(source, start, end, nodes):
   from subprocess import check_output, call
   from os import chmod
@@ -43,5 +44,12 @@ def process(source, start, end, nodes):
 
 def process(source, start, end, nodes):
   from subprocess import call
-  call(args=["/home/maxhutch/src/nek-analyze/load.py", source, "-f {:d}".format(start), "-e {:d}".format(end)])
-"""
+  opts = ["--thread=8", "-v"]
+  #opts = ["--thread=1", "-v"]
+  call(args=["/home/maxhutch/src/nek-analyze/load.py", source, "-f {:d}".format(start), "-e {:d}".format(end)] + opts)
+
+def visualize(source, start, end, nodes):
+  from subprocess import call
+  opts = []
+  call(args=["/home/maxhutch/src/nek-analyze/visualize.py", source, "-f {:d}".format(start), "-e {:d}".format(end)] + opts)
+

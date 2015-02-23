@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #!/home/maxhutch/anaconda3/bin/python
 
 from ui import command_line_ui
@@ -32,6 +30,8 @@ else:
 if args.nodes != 0:
   from analyze import process
   process(args.root+args.name, args.frame, args.frame_end, args.nodes)
+
+from analyze import visualize
 
 # setup upload
 from globus import upload_results
