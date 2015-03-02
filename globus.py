@@ -1,3 +1,23 @@
+from subprocess import call, check_output
+
+def globus_exists(path):
+  foo = check_output(args=["/usr/bin/ssh", "globus", "ls {:s}".format(path)])
+  return not len(foo) == 0
+
+def transfer_sync(transfer, label="workflow_sync"):
+  with open("tmp.transfer", "w") as f:
+    f.write(transfer)
+  taskid = check_output(args=["/usr/bin/ssh", "globus", "transfer --generate-id"]).decode("utf-8")
+  with open("tmp.transfer", "r") as f:
+    call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label={:s} --taskid={:s}".format(label, taskid)], stdin=f)
+  print("Waiting for globus task {:s}".format(taskid))
+  call(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)])
+
+def transfer_async(transfer, label="workflow_async"):
+  with open("tmp.transfer", "w") as f:
+    f.write(transfer)
+  with open("tmp.transfer", "r") as f:
+    call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label={:s}".format(label)], stdin=f)
 
 def upload_results(home_end, output, source):
   from os.path import dirname, basename
@@ -17,11 +37,7 @@ def upload_results(home_end, output, source):
       transfer += "{:s}/{:s} {:s}/{:s}/dat/{:s} \n".format(home_end+experiment, file, output, experiment, file)
  
   # write and execute transfer
-  from subprocess import call
-  with open("tmp.transfer", "w") as f:
-    f.write(transfer)
-  with open("tmp.transfer", "r") as f:
-    call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label=upload_{:s}_proc".format(run)], stdin=f)
+  transfer_async(transfer, "upload_{:s}_proc".format(run))
 
 def archive(archive, home_end, source, start, end, params):
   from os.path import basename
@@ -33,12 +49,22 @@ def archive(archive, home_end, source, start, end, params):
       fname_src = get_fname(source, i, j, params) 
       fname_dst = get_fname(source, i, j, params, fmt = "{root:s}/raw/T{frame:05d}/{name:s}{proc:s}.f{frame:05d}") 
       transfer += "{:s}{:s} {:s}/{:s}\n".format(home_end, fname_src, archive, fname_dst)
-  with open("tmp.transfer", "w") as f:
-    f.write(transfer)
-  
-  from subprocess import call
-  with open("tmp.transfer", "r") as f:
-    call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label=archive_{:s}_raw".format(run)], stdin=f)
+  transfer_async(transfer, "archive_{:s}_raw".format(run))
+
+def recover_chest(archive, home_end, source):
+  from os.path import basename
+  run = basename(source)
+  fname_src = "{:s}/{:s}-results/".format(archive, source)
+  fname_dst = "{:s}/{:s}-results/".format(home_end, source)
+  transfer = ""
+  if globus_exists(fname_src):
+    transfer += "{:s} {:s} -r \n".format(fname_src, fname_dst)
+  fname_src = "{:s}/{:s}.json".format(archive, source)
+  fname_dst = "{:s}/{:s}.json".format(home_end, source)
+  if globus_exists(fname_src):
+    transfer += "{:s} {:s} \n".format(fname_src, fname_dst)
+
+  transfer_sync(transfer, "recover_{:s}_chest".format(run))
 
 def recover(archive, home_end, source, start, end, params):
   from os.path import basename
@@ -50,16 +76,4 @@ def recover(archive, home_end, source, start, end, params):
       fname_src = get_fname(source, i, j, params) 
       fname_dst = get_fname(source, i, j, params, fmt = "/{root:s}/raw/T{frame:05d}/{name:s}{proc:s}.f{frame:05d}") 
       transfer += "{:s}/{:s} {:s}/{:s}\n".format(archive, fname_dst, home_end, fname_src)
-  with open("tmp.transfer", "w") as f:
-    f.write(transfer)
-  
-  from subprocess import call
-  with open("tmp.stdout", "w") as f:
-    call(args=["/usr/bin/ssh", "globus", "transfer --generate-id"], stdout=f)
-  with open("tmp.stdout", "r") as f:
-    taskid = f.readline()
-  with open("tmp.transfer", "r") as f:
-    call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label=restore_{:s}_raw --taskid={:s}".format(run, taskid)], stdin=f)
-  print("Waiting for globus task {:s}".format(taskid))
-  call(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)])
-
+  transfer_sync(transfer, "restore_{:s}_raw".format(run))

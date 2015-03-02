@@ -19,10 +19,12 @@ def command_line_ui():
   defaults = {
                'start' : 1,
                'nodes' : 1,
-               'enable_archive' : False,
-               'enable_upload'  : False,
+               'archive' : False,
+               'upload'  : False,
+               'sync'    : True,
+               'process' : False,
                'arch_end' : "acherry#hpss_test/~/pub/",
-               'outp_end' : "maxhutch#alpha-admin/tmp/",
+               'outp_end' : "maxhutch#alpha-admin/pub/",
                'home_end' : "maxhutch#edoras/home/maxhutch/science/RTI/",
                'foo'      : "bar"
              }
@@ -35,24 +37,27 @@ def command_line_ui():
   p = ArgumentParser()
   p.add_argument("name",                 
                  help="Name and path of Nek output files")
-  p.add_argument("-a", "--archive_end", default=defaults["arch_end"],
-                 help="Archive endpoint")
-  p.add_argument("-m", "--home_end", default=defaults["home_end"],
+  p.add_argument("-a", "--archive_end", 
+                 help="Archive endpoint", dest="arch_end")
+  p.add_argument("-m", "--home_end",
                  help="Home endpoint")
-  p.add_argument("-o", "--output_end", default=defaults["outp_end"],
-                 help="Output endpoint")
-  p.add_argument("-f",  "--frame", type=int, default=1, 
+  p.add_argument("-o", "--output_end", 
+                 help="Output endpoint", dest="outp_end")
+  p.add_argument("-f",  "--frame", type=int, 
                  help="[Starting] Frame number")
   p.add_argument("-e",  "--frame_end", type=int, default=-1,   
                  help="Ending frame number")
+  p.add_argument("--sync",       action="store_true",   help="Sync params and chest", dest="sync")
+  p.add_argument("--no-sync",    action="store_false",  help="Sync params and chest", dest="sync")
+  p.add_argument("--process",    action="store_true",   help="Process the frames", dest="process")
+  p.add_argument("--no-process", action="store_false",  help="Process the frames", dest="process")
   p.add_argument("--archive",    action="store_true",   help="Archive raw",   dest="archive")
   p.add_argument("--no-archive", action="store_false",  help="Archive raw",   dest="archive")
   p.add_argument("--upload",     action="store_true",   help="Upload results", dest="upload")
   p.add_argument("--no-upload",  action="store_false",  help="Upload results", dest="upload")
-  p.set_defaults(archive=defaults["enable_archive"])
-  p.set_defaults(upload=defaults["enable_upload"])
-  p.add_argument("-n", "--nodes", type=int, default=1,
+  p.add_argument("-n", "--nodes", type=int,
                  help="Number of nodes to run on")
+  p.set_defaults(**defaults)
 
   """ 
   p.add_argument("-s",  "--slice", action="store_true",
