@@ -24,27 +24,28 @@ if not new_source:
  if args.archive:
   print("Found {:s}, archiving".format(fname))
   from globus import archive
-  archive(args.archive_end, args.home_end, args.name, args.frame, args.frame_end, params)
+  archive(args.arch_end, args.home_end, args.name, args.frame, args.frame_end, params)
 else:
  if args.process:
   print("Not Found {:s}, recovering".format(fname))
   from globus import recover
-  recover(args.archive_end, args.home_end, args.name, args.frame, args.frame_end, params)
+  recover(args.arch_end, args.home_end, args.name, args.frame, args.frame_end, params)
 
 # queue processing job
 if args.process and args.nodes != 0:
   from analyze import process
   process(args.root+args.name, args.frame, args.frame_end, args.nodes)
 
-from analyze import visualize
-visualize(args.root+args.name, args.frame, args.frame_end, args.nodes)
+#from analyze import visualize
+#from analyze import visualize
+#visualize(args.root+args.name, args.frame, args.frame_end, args.nodes)
 
 # setup upload
 from globus import upload_results
 if args.upload:
-  upload_results(args.home_end, args.output_end, args.name)
+  upload_results(args.home_end, args.outp_end, args.name)
 
 # setup archive
 if args.upload:
-  upload_results(args.home_end, args.archive_end, args.name)
+  upload_results(args.home_end, args.arch_end, args.name)
 

@@ -18,7 +18,9 @@ sleep 10
 mpirun -f $COBALT_NODEFILE --n=${PROCS} /home/maxhutch/anaconda3/bin/ipengine --profile=mpi  &
 sleep 10
 
-./load.py $1 -f $2 -e $3 -nt 16 -nb 8192 --mapreduce=RTI_new.MapReduce --post=RTI_new.single_post --parallel
+#./load.py $1 -f $2 -e $3 -nt 16 -nb 256 --mapreduce=RTI_new.MapReduce --post=RTI_new.single_post 
+./load.py $1 -f $2 -e $3 -nt 16 -nb 256 --mapreduce=RTI.MapReduce --post=RTI.single_post  --parallel
+#./load.py $1 -f $2 -e $3 -nt 16 -nb 256 --mapreduce=RTI.MapReduce --post=RTI.single_post  --parallel --params=/projects/alpha-nek/${1}.json --chest=/projects/alpha-nek/${1}-resultss --figs=/projects/alpha-nek/${1}-figs
 sleep 5
 kill %2
 sleep 5
@@ -27,7 +29,6 @@ sleep 5
 exit
 """
 
-"""
 def process(source, start, end, nodes):
   from subprocess import check_output, call
   from os import chmod
@@ -35,7 +36,9 @@ def process(source, start, end, nodes):
   with open("tmp.job", "w") as f:
     f.write(cobalt_template)
   chmod("tmp.job", stat.S_IXUSR | stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
-  stdout = check_output(args=["qsub", "-t 120", "-n {:d}".format(nodes), "tmp.job", source, "{:d} {:d}".format(start, end)])
+  stdout = check_output(args=["qsub", "-t 120",
+                              #"--queue=pubnet", 
+                              "-n {:d}".format(nodes), "tmp.job", source, "{:d} {:d}".format(start, end)])
   # wait for processing job
   jobid = int(stdout)
   print("Waiting for job {:d}".format(jobid))
@@ -53,3 +56,4 @@ def visualize(source, start, end, nodes):
   opts = []
   call(args=["/home/maxhutch/src/nek-analyze/visualize.py", source, "-f {:d}".format(start), "-e {:d}".format(end)] + opts)
 
+"""
