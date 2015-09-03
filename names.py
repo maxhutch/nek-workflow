@@ -3,7 +3,7 @@ def get_fname(source, proc_i, frame, params, fmt = None):
   from os.path import dirname, basename
   from math import log10
   if fmt == None and params["io_files"] > 0:
-    fmt = "{root:s}{name:s}{proc:s}.f{frame:05d}"
+    fmt = "{root:s}/{name:s}{proc:s}.f{frame:05d}"
   elif fmt == None:
     fmt = "{root:s}/A{proc:s}/{name:s}{proc:s}.f{frame:05d}"
   root = dirname(source)
