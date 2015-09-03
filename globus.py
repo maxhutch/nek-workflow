@@ -4,12 +4,15 @@ def globus_exists(path):
   foo = check_output(args=["/usr/bin/ssh", "globus", "ls {:s}".format(path)])
   return not len(foo) == 0
 
+def tar(tar, files):
+  call(args=["tar", "cvf", tar,]+files)
+
 def transfer_sync(transfer, label="workflow_sync"):
   with open("tmp.transfer", "w") as f:
     f.write(transfer)
   taskid = check_output(args=["/usr/bin/ssh", "globus", "transfer --generate-id"]).decode("utf-8")
   with open("tmp.transfer", "r") as f:
-    call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label={:s} --taskid={:s}".format(label, taskid)], stdin=f)
+    call(args=["/usr/bin/ssh", "globus", "transfer --label={:s} --taskid={:s}".format(label, taskid)], stdin=f)
   print("Waiting for globus task {:s}".format(taskid))
   call(args=["/usr/bin/ssh", "globus", "wait -q {:s}".format(taskid)])
 
@@ -17,7 +20,7 @@ def transfer_async(transfer, label="workflow_async"):
   with open("tmp.transfer", "w") as f:
     f.write(transfer)
   with open("tmp.transfer", "r") as f:
-    call(args=["/usr/bin/ssh", "globus", "transfer -s 3 --label={:s}".format(label)], stdin=f)
+    call(args=["/usr/bin/ssh", "globus", "transfer --label={:s}".format(label)], stdin=f)
 
 def upload_results(home_end, output, source):
   from os.path import dirname, basename
@@ -33,23 +36,30 @@ def upload_results(home_end, output, source):
   for file in listdir(home+experiment):
     if file[-3:] == "png":
       transfer += "{:s}/{:s} {:s}/{:s}/img/{:s} \n".format(home_end+experiment, file, output, experiment, file)
-    if file[-3:] == "npz":
-      transfer += "{:s}/{:s} {:s}/{:s}/dat/{:s} \n".format(home_end+experiment, file, output, experiment, file)
+    if file[-6:] == "output":
+      transfer += "{:s}/{:s} {:s}/{:s}/stdout/{:s} \n".format(home_end+experiment, file, output, experiment, file)
  
   # write and execute transfer
-  transfer_async(transfer, "upload_{:s}_proc".format(run))
+  transfer_async(transfer, "upload_proc".format(run))
 
-def archive(archive, home_end, source, start, end, params):
+def archive(archive, home_end, root, source, start, end, params):
   from os.path import basename
+  from os import remove
   run = basename(source)
   from names import get_fname
   transfer = ""
   for j in range(start, end+1):
+    files_src = []
     for i in range(int(abs(params["io_files"]))):
-      fname_src = get_fname(source, i, j, params) 
-      fname_dst = get_fname(source, i, j, params, fmt = "{root:s}/raw/T{frame:05d}/{name:s}{proc:s}.f{frame:05d}") 
-      transfer += "{:s}{:s} {:s}/{:s}\n".format(home_end, fname_src, archive, fname_dst)
-  transfer_async(transfer, "archive_{:s}_raw".format(run))
+      files_src.append(get_fname(root+source, i, j, params))
+    tar_file = "{:s}/T{:05d}.tar".format(root,j)
+    tar(tar_file, files_src)
+
+    fname_dst = get_fname(source, i, j, params, fmt = "{root:s}/raw/T{frame:05d}.tar") 
+    transfer = "{:s}/T{:05d}.tar {:s}/{:s}\n".format(home_end, j, archive, fname_dst)
+    transfer_sync(transfer, "archive_raw")
+    remove(tar_file)
+    
 
 def recover_chest(archive, home_end, source):
   from os.path import basename
@@ -76,4 +86,4 @@ def recover(archive, home_end, source, start, end, params):
       fname_src = get_fname(source, i, j, params) 
       fname_dst = get_fname(source, i, j, params, fmt = "/{root:s}/raw/T{frame:05d}/{name:s}{proc:s}.f{frame:05d}") 
       transfer += "{:s}/{:s} {:s}/{:s}\n".format(archive, fname_dst, home_end, fname_src)
-  transfer_sync(transfer, "restore_{:s}_raw".format(run))
+  transfer_sync(transfer, "restore_raw".format(run))

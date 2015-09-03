@@ -24,7 +24,7 @@ if not new_source:
  if args.archive:
   print("Found {:s}, archiving".format(fname))
   from globus import archive
-  archive(args.arch_end, args.home_end, args.name, args.frame, args.frame_end, params)
+  archive(args.arch_end, args.home_end, args.root, args.name, args.frame, args.frame_end, params)
 else:
  if args.process:
   print("Not Found {:s}, recovering".format(fname))
@@ -34,7 +34,7 @@ else:
 # queue processing job
 if args.process and args.nodes != 0:
   from analyze import process
-  process(args.root+args.name, args.frame, args.frame_end, args.nodes)
+  process(args.root+args.name, args.frame, args.frame_end, args.nodes, args.analysis)
 
 #from analyze import visualize
 #from analyze import visualize
