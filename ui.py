@@ -23,7 +23,8 @@ def command_line_ui():
                'upload'  : False,
                'sync'    : True,
                'process' : False,
-               'arch_end' : "acherry#hpss_test/~/pub/",
+               'analysis' : "RTI", 
+               'arch_end' : "alcf#dtn_hpss/~/pub/",
                'outp_end' : "maxhutch#alpha-admin/pub/",
                'home_end' : "maxhutch#edoras/home/maxhutch/science/RTI/",
                'foo'      : "bar"
@@ -47,6 +48,7 @@ def command_line_ui():
                  help="[Starting] Frame number")
   p.add_argument("-e",  "--frame_end", type=int, default=-1,   
                  help="Ending frame number")
+  p.add_argument("--analysis", help="Anaysis package to use for post-processing")
   p.add_argument("--sync",       action="store_true",   help="Sync params and chest", dest="sync")
   p.add_argument("--no-sync",    action="store_false",  help="Sync params and chest", dest="sync")
   p.add_argument("--process",    action="store_true",   help="Process the frames", dest="process")
