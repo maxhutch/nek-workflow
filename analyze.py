@@ -30,6 +30,7 @@ sleep 5
 exit
 """
 
+"""
 def process(source, start, end, nodes, analysis = "RTI"):
   from subprocess import check_output, call
   from os import chmod
@@ -46,15 +47,15 @@ def process(source, start, end, nodes, analysis = "RTI"):
   call(args=["cqwait", "{:d}".format(jobid)])
 """
 
-def process(source, start, end, nodes):
+def process(source, start, end, nodes, analysis = "RTI"):
   from subprocess import call
-  opts = ["--thread=8", "-v"]
+  opts = ["--thread=8", "-v", "--mapreduce={:s}.MapReduce".format(analysis), "--post={:s}.single_post".format(analysis), "--single_pos"]
   #opts = ["--thread=1", "-v"]
   call(args=["/home/maxhutch/src/nek-analyze/load.py", source, "-f {:d}".format(start), "-e {:d}".format(end)] + opts)
 
+"""
 def visualize(source, start, end, nodes):
   from subprocess import call
   opts = []
   call(args=["/home/maxhutch/src/nek-analyze/visualize.py", source, "-f {:d}".format(start), "-e {:d}".format(end)] + opts)
-
 """
